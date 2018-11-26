@@ -1,0 +1,89 @@
+spamscanner
+===========
+
+A tool to scan and remove spam mails in your
+mailboxes, using Bogofilter [1].
+
+* PREREQUISITES
+
+Before you can start, please make sure that
+you have:
+
+  - Your mail synced locally with mbsync or
+  offlineimap,...
+  - Bogofilter installed and trained (if you
+  don't have it yet, see the next section).
+  - A mail client like Mutt, mu4e,...
+  
+* BOGOFILTER TRAINING WITH MUTT
+
+If you're using Mutt, you can use the following
+keybindings to train Bogofilter:
+
+  # Move mail back to inbox and mark as not spam
+  macro index,pager . "<enter-command>unset wait_key\n<tag-prefix><pipe-entry>bogofilter -Mn\n<enter-command>set wait_key\n<save-message>=<enter>"
+
+  # Mark as not spam and do nothing else
+  macro index n "<enter-command>unset wait_key\n<tag-prefix><pipe-entry>bogofilter -Mn\n<enter-command>set wait_key\n"
+  macro pager n "<enter-command>unset wait_key\n<pipe-entry>bogofilter -Mn\n<enter-command>set wait_key\n"
+
+  # Mark as spam and delete
+  macro index x "<enter-command>unset wait_key\n<tag-prefix><pipe-entry>bogofilter -MNs\n<enter-command>set wait_key\n<tag-prefix><save-message>=../spam<enter>"
+  macro pager x "<enter-command>unset wait_key\n<pipe-entry>bogofilter -MNs\n<enter-command>set wait_key\n<save-message>=../spam</enter>"
+
+* FILTERING SPAM WITH BOGOFILTER
+
+Let's assume you have all your mails stored
+in ~/mail directory. Each of the sub folder
+is a mailbox, following the Maildir format:
+
+.
+├── inbox
+│   ├── cur
+│   ├── new
+│   └── tmp
+├── spam
+│   ├── cur
+│   ├── new
+│   └── tmp
+└── trash
+    ├── cur
+    ├── new
+    └── tmp
+
+The [inbox] is where you got all of your mail
+stored. And [spam] is where you want to store
+all of the junk mail.
+
+If you do not use the same scheme as above, you
+will need to change the following config:
+
+  SRC=$HOME/mail/inbox
+  DST=$HOME/mail/spam/new
+  
+The $DST variable is the target directory where
+you will move all of the junk mail to, it's the
+[new] folder because we want to see which email
+is newly moved in. And $SRC is where your inbox
+stay.
+
+Run the scan script:
+
+  ./spamscanner
+  
+The spamscanner will scan every mail in the inbox
+and pipe that email to Bogofilter, if it's a spam
+mail, Bogofilter will return something in the form
+of "X-Bogosity: Spam", the script will then check
+this header and move spam mails into [spam] mailbox.
+
+During the check, the script will count for the spam
+mail and eventually trigger a notification message
+telling you how many mail has been moved to spam.
+
+You can set a cronjob to run [spamscanner] periodically
+or integrate it to your mail fetcher, for example, with
+offlineimap:
+
+  postsynchook = /your/path/to/spamscanner
+  
