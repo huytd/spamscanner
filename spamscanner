@@ -1,0 +1,17 @@
+SRC=$HOME/mail/inbox
+DST=$HOME/mail/spam/new
+FILES=$(rg -l -F "Delivered-To" $SRC)
+
+COUNT=0
+
+for file in $FILES; do
+    RESULT=$(bogofilter -I $file -v)
+    if [[ $RESULT == *Spam* ]]; then
+       mv $file $DST
+       COUNT=$((COUNT+1))
+    fi
+done
+
+if (( $COUNT > 0 )); then
+   osascript -e 'display notification "Removed '$COUNT' spam emails"'
+fi
